@@ -24,7 +24,15 @@ function bulkImport(docs) {
 
     var docsLength = docs.length;
     if (docsLength == 0) {
-        getContext().getResponse().setBody(0);
+        var body =
+            {
+                i: count,
+                ii: docs,
+                l: docs.length,
+                e: "docs array has a length of 0"
+            }
+
+        getContext().getResponse().setBody(body);
     }
 
     // Call the CRUD API to create a document. 
@@ -36,7 +44,7 @@ function bulkImport(docs) {
     // 2) The callback was called docs.length times. 
     //    In this case all documents were created and we don't need to call tryCreate anymore. Just call setBody and we are done. 
     function tryCreate(doc, callback) {
-        var isAccepted = collection.createDocument(collectionLink, doc, callback);
+        var isAccepted = collection.upsertDocument(collectionLink, doc, callback);
 
         // If the request was accepted, callback will be called. 
         // Otherwise report current count back to the client,  
@@ -44,7 +52,15 @@ function bulkImport(docs) {
         // This condition will happen when this stored procedure has been running too long 
         // and is about to get cancelled by the server. This will allow the calling client 
         // to resume this batch from the point we got to before isAccepted was set to false 
-        if (!isAccepted) getContext().getResponse().setBody(count);
+        var body =
+            {
+                i: count,
+                ii: docs,
+                l: docs.length,
+                e: "error trying to add the doc"
+            }
+
+        if (!isAccepted) getContext().getResponse().setBody(body);
     }
 
     // This is called when collection.createDocument is done and the document has been persisted. 
@@ -56,7 +72,14 @@ function bulkImport(docs) {
 
         if (count >= docsLength) {
             // If we have created all documents, we are done. Just set the response. 
-            getContext().getResponse().setBody(count);
+            var body =
+                {
+                    i: count,
+                    ii: docs,
+                    l: docs.length,
+                    e: ""
+                }
+            getContext().getResponse().setBody(body);
         } else {
             // Create next document. 
             tryCreate(docs[count], callback);

@@ -179,13 +179,14 @@
                 var args = new dynamic[] { JsonConvert.DeserializeObject<dynamic>(argsJson) };
 
                 // 6. execute the batch.
-                StoredProcedureResponse<int> scriptResult = await client.ExecuteStoredProcedureAsync<int>(
+                StoredProcedureResponse<dynamic> scriptResult = await client.ExecuteStoredProcedureAsync<dynamic>(
                     sproc.SelfLink,
                     new RequestOptions { PartitionKey = new PartitionKey("Andersen") },
                     args);
 
                 // 7. Prepare for next batch.
-                int currentlyInserted = scriptResult.Response;
+                var dynResp = scriptResult.Response;
+                int currentlyInserted = dynResp.i;
                 currentCount += currentlyInserted;
             }
 
@@ -530,10 +531,12 @@
         /// <returns></returns>
         private static async Task TryDeleteStoredProcedure(string collectionLink, string sprocId)
         {
-            StoredProcedure sproc = client.CreateStoredProcedureQuery(collectionLink).Where(s => s.Id == sprocId).AsEnumerable().FirstOrDefault();
+            var sprocA = client.CreateStoredProcedureQuery(collectionLink);
+            StoredProcedure sproc = sprocA.Where(s => s.Id == sprocId).AsEnumerable().FirstOrDefault();
+//            StoredProcedure sproc = client.CreateStoredProcedureQuery(collectionLink).Where(s => s.Id == sprocId).AsEnumerable().FirstOrDefault();
             if (sproc != null)
             {
-                await client.DeleteStoredProcedureAsync(sproc.SelfLink);
+                var delStat = await client.DeleteStoredProcedureAsync(sproc.SelfLink);
             }
         }
         
