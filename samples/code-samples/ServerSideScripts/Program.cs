@@ -178,6 +178,8 @@
                 string argsJson = CreateBulkInsertScriptArguments(fileNames, currentCount, fileCount, maxScriptSize);
                 var args = new dynamic[] { JsonConvert.DeserializeObject<dynamic>(argsJson) };
 
+                var jsonString = JsonConvert.SerializeObject(args);
+
                 // 6. execute the batch.
                 StoredProcedureResponse<dynamic> scriptResult = await client.ExecuteStoredProcedureAsync<dynamic>(
                     sproc.SelfLink,
